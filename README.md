@@ -1,4 +1,33 @@
-# 🎄 Intercambio Navideño 2025 🎄
+# Append runtime deps
+cat >> `requirements.txt` <<'EOF'
+gunicorn==20.1.0
+psycopg2-binary==2.9.7
+EOF
+
+# Example snippet to add/merge into your `app.py` so it uses env vars (keeps SQLite as fallback)
+cat > `app_env_snippet.py` <<'PY'
+import os
+from flask import Flask
+
+app = Flask(__name__)
+
+# Secret key from env (set in Render environment)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
+
+# Prefer Postgres via DATABASE_URL, fallback to local sqlite
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL',
+    'sqlite:///intercambio.db'
+)
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    debug_flag = os.environ.get('FLASK_DEBUG', '0') == '1'
+    app.run(host='0.0.0.0', port=port, debug=debug_flag)
+PY
+
+# Render start command to use in the dashboard:
+# gunicorn app:app --bind 0.0.0.0:$PORT# 🎄 Intercambio Navideño 2025 🎄
 
 Aplicación web para gestionar el intercambio navideño (Secret Santa) con restricciones familiares y anonimato condicional.
 
