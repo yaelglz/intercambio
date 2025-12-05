@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="sorteo-container">
+    <h2>Realizar Sorteo</h2>
+    
+    <div class="info-box">
+        <p><strong>Usuarios registrados:</strong> {{ usuarios|length }}</p>
+        <p><strong>Usuarios con Santa Claus asignado:</strong> {{ usuarios_con_santa|length }}</p>
+        <p><strong>Usuarios sin asignar:</strong> {{ usuarios_sin_santa|length }}</p>
+    </div>
+    
+    {% if usuarios_sin_santa|length > 0 %}
+    <div class="form-container">
+        <form method="POST" action="{{ url_for('realizar_sorteo') }}" onsubmit="return confirm('¿Estás seguro de realizar el sorteo? Esto asignará un Santa Claus a cada usuario.');">
+            <button type="submit" class="btn btn-primary">Realizar Sorteo</button>
+        </form>
+    </div>
+    {% endif %}
+    
+    {% if usuarios_con_santa|length > 0 %}
+    <div class="form-container">
+        <form method="POST" action="{{ url_for('limpiar_sorteo') }}" onsubmit="return confirm('¿Estás seguro de limpiar el sorteo? Esto eliminará todas las asignaciones.');">
+            <button type="submit" class="btn btn-danger">Limpiar Sorteo</button>
+        </form>
+    </div>
+    
+    <div class="asignaciones-table">
+        <h3>Asignaciones Actuales</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Jefe de Familia</th>
+                    <th>Santa Claus</th>
+                    <th>Presupuesto Santa Claus</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                {% if usuario.santa_claus_id %}
+                {% set santa = none %}
+                {% for u in usuarios %}
+                    {% if u.id == usuario.santa_claus_id %}
+                        {% set santa = u %}
+                    {% endif %}
+                {% endfor %}
+                <tr>
+                    <td>{{ usuario.nombre }}</td>
+                    <td>{{ usuario.jefe_familia }}</td>
+                    <td>{{ santa.nombre if santa else 'N/A' }}</td>
+                    <td>${{ "%.2f"|format(santa.presupuesto_min) if santa else 'N/A' }} - ${{ "%.2f"|format(santa.presupuesto_max) if santa else 'N/A' }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <div class="usuarios-list">
+        <h3>Todos los Usuarios Registrados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <!--<th>Jefe de Familia</th>-->
+                    <!--<th>Presupuesto</th>-->
+                    <th>Navidad en Tepoztlán</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario.nombre }}</td>
+                    <!--<td>{{ usuario.jefe_familia }}</td>-->
+                    <!--<td>${{ "%.2f"|format(usuario.presupuesto_min) }} - ${{ "%.2f"|format(usuario.presupuesto_max) }}</td>-->
+                    <td>{{ usuario.navidad_tepoztlan }}</td>
+                    <td>
+                        {% if usuario.santa_claus_id %}
+                            <span class="badge badge-success">Asignado</span>
+                        {% else %}
+                            <span class="badge badge-warning">Sin asignar</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('eliminar_usuario', usuario_id=usuario.id) }}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar a {{ usuario.nombre }}? Esta acción no se puede deshacer.');">
+                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
